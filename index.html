@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Market Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .search-container {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .search-btn:active {
+            transform: translateY(0);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-container {
+            display: none;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .company-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .company-name {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .company-ticker {
+            font-size: 1.2rem;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .metric-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .metric-value {
+            font-weight: 700;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .positive {
+            color: #28a745;
+        }
+
+        .negative {
+            color: #dc3545;
+        }
+
+        .error {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            color: #c53030;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .api-info {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .api-info h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+
+        .api-info p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .api-info a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .api-info a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .search-form {
+                flex-direction: column;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .company-name {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📈 Financial Market Dashboard</h1>
+            <p>Get comprehensive market data and company analysis</p>
+        </div>
+
+        <div class="api-info">
+            <h3>📊 Financial Market Analysis</h3>
+            <p><strong>Demo Mode:</strong> In this Claude artifact, try "AAPL" or "MSFT" to see sample data and interface.</p>
+            <p><strong>Live Version:</strong> When deployed to a hosting service, this will pull real-time data from Alpha Vantage API for any ticker symbol.</p>
+            <p>Simply enter a company ticker symbol to get detailed financial metrics and market data.</p>
+        </div>
+
+        <div class="search-container">
+            <form class="search-form" id="searchForm">
+                <div class="input-group">
+                    <label for="ticker">Company Ticker Symbol</label>
+                    <input type="text" id="ticker" placeholder="e.g., AAPL, MSFT, GOOGL, TSLA" required>
+                </div>
+                <button type="button" class="search-btn">
+                    🔍 Analyze Stock
+                </button>
+            </form>
+        </div>
+
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Fetching financial data...</p>
+        </div>
+
+        <div class="results-container" id="results">
+            <div class="company-header">
+                <div class="company-name" id="companyName"></div>
+                <div class="company-ticker" id="companyTicker"></div>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="card-title">
+                        <div class="card-icon">$</div>
+                        Stock Price & Valuation
+                    </div>
+                    <div id="priceMetrics"></div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="card-title">
+                        <div class="card-icon">📊</div>
+                        Profitability Metrics
+                    </div>
+                    <div id="profitabilityMetrics"></div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="card-title">
+                        <div class="card-icon">📈</div>
+                        Growth & Performance
+                    </div>
+                    <div id="growthMetrics"></div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="card-title">
+                        <div class="card-icon">🏦</div>
+                        Financial Health
+                    </div>
+                    <div id="financialMetrics"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = '6UES3G7ZXAGC0AAH'; // Your Alpha Vantage API key
+        let currentTicker = '';
+
+        document.getElementById('searchForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            currentTicker = document.getElementById('ticker').value.trim().toUpperCase();
+            
+            if (!currentTicker) {
+                alert('Please enter a ticker symbol');
+                return false;
+            }
+
+            await fetchStockData();
+            return false;
+        });
+
+        // Also add click handler to the button as backup
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchBtn = document.querySelector('.search-btn');
+            const tickerInput = document.getElementById('ticker');
+            
+            searchBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                currentTicker = tickerInput.value.trim().toUpperCase();
+                
+                if (!currentTicker) {
+                    alert('Please enter a ticker symbol');
+                    return false;
+                }
+
+                await fetchStockData();
+                return false;
+            });
+
+            // Also allow Enter key in input field
+            tickerInput.addEventListener('keypress', async function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    currentTicker = tickerInput.value.trim().toUpperCase();
+                    
+                    if (!currentTicker) {
+                        alert('Please enter a ticker symbol');
+                        return false;
+                    }
+
+                    await fetchStockData();
+                    return false;
+                }
+            });
+        });
+
+        async function fetchStockData() {
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            
+            console.log('Starting fetch for ticker:', currentTicker);
+            loading.style.display = 'block';
+            results.style.display = 'none';
+
+            try {
+                console.log('Fetching data...');
+                // Test with just overview first
+                const overview = await fetchCompanyOverview();
+                
+                if (overview.Note) {
+                    throw new Error('API limit reached: ' + overview.Note);
+                }
+                
+                if (!overview.Symbol) {
+                    throw new Error('Invalid ticker symbol or no data available');
+                }
+
+                // If overview works, fetch the rest
+                const [quote, earnings] = await Promise.all([
+                    fetchQuote(),
+                    fetchEarnings()
+                ]);
+
+                console.log('All data fetched successfully');
+                displayResults(overview, quote, earnings);
+                
+            } catch (error) {
+                console.error('Error details:', error);
+                displayError(`Error: ${error.message}. Please check the browser console for more details.`);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Sample data for demonstration (this will be replaced with real API data when deployed)
+        const sampleData = {
+            'AAPL': {
+                overview: {
+                    Symbol: 'AAPL',
+                    Name: 'Apple Inc',
+                    Exchange: 'NASDAQ',
+                    PERatio: '28.5',
+                    ForwardPE: '26.2',
+                    PriceToBookRatio: '39.4',
+                    PEGRatio: '2.8',
+                    '52WeekHigh': '199.62',
+                    '52WeekLow': '164.08',
+                    ReturnOnEquityTTM: '1.47',
+                    ReturnOnAssetsTTM: '0.223',
+                    OperatingMarginTTM: '0.297',
+                    ProfitMargin: '0.257',
+                    GrossProfitTTM: '169148000000',
+                    EBITDA: '123136000000',
+                    DividendYield: '0.0044',
+                    EPS: '6.43',
+                    QuarterlyRevenueGrowthYOY: '0.021',
+                    QuarterlyEarningsGrowthYOY: '0.113',
+                    RevenueTTM: '381623000000',
+                    AnalystTargetPrice: '230.5',
+                    Beta: '1.24',
+                    BookValue: '4.837',
+                    MarketCapitalization: '3000000000000',
+                    DebtToEquity: '1.73',
+                    CurrentRatio: '0.95',
+                    QuickRatio: '0.83',
+                    SharesOutstanding: '15552752000',
+                    ExDividendDate: '2024-02-09',
+                    DividendDate: '2024-02-15'
+                },
+                quote: {
+                    'Global Quote': {
+                        '05. price': '190.85',
+                        '09. change': '2.45',
+                        '10. change percent': '1.30%'
+                    }
+                }
+            },
+            'MSFT': {
+                overview: {
+                    Symbol: 'MSFT',
+                    Name: 'Microsoft Corporation',
+                    Exchange: 'NASDAQ',
+                    PERatio: '32.1',
+                    ForwardPE: '28.7',
+                    PriceToBookRatio: '12.8',
+                    PEGRatio: '2.1',
+                    '52WeekHigh': '468.35',
+                    '52WeekLow': '362.90',
+                    ReturnOnEquityTTM: '0.354',
+                    ReturnOnAssetsTTM: '0.134',
+                    OperatingMarginTTM: '0.423',
+                    ProfitMargin: '0.362',
+                    GrossProfitTTM: '146052000000',
+                    EBITDA: '109785000000',
+                    DividendYield: '0.0067',
+                    EPS: '13.05',
+                    QuarterlyRevenueGrowthYOY: '0.135',
+                    QuarterlyEarningsGrowthYOY: '0.205',
+                    RevenueTTM: '245122000000',
+                    AnalystTargetPrice: '475.20',
+                    Beta: '0.89',
+                    BookValue: '36.88',
+                    MarketCapitalization: '3100000000000',
+                    DebtToEquity: '0.35',
+                    CurrentRatio: '1.27',
+                    QuickRatio: '1.25',
+                    SharesOutstanding: '7430000000',
+                    ExDividendDate: '2024-02-14',
+                    DividendDate: '2024-03-14'
+                },
+                quote: {
+                    'Global Quote': {
+                        '05. price': '420.15',
+                        '09. change': '-3.25',
+                        '10. change percent': '-0.77%'
+                    }
+                }
+            }
+        };
+
+        async function fetchCompanyOverview() {
+            // In the Claude artifact environment, we'll use sample data
+            // When deployed to a real server, this will make actual API calls
+            const isInArtifact = window.location.protocol === 'about:';
+            
+            if (isInArtifact) {
+                console.log('Using sample data for demonstration in Claude artifact');
+                await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
+                if (sampleData[currentTicker]) {
+                    return sampleData[currentTicker].overview;
+                } else {
+                    throw new Error(`Sample data not available for ${currentTicker}. Try AAPL or MSFT for demo.`);
+                }
+            } else {
+                // Real API call for when deployed
+                const response = await fetch(`https://www.alphavantage.co/query?function=OVERVIEW&symbol=${currentTicker}&apikey=${apiKey}`);
+                return await response.json();
+            }
+        }
+
+        async function fetchQuote() {
+            const isInArtifact = window.location.protocol === 'about:';
+            
+            if (isInArtifact) {
+                await new Promise(resolve => setTimeout(resolve, 300));
+                if (sampleData[currentTicker]) {
+                    return sampleData[currentTicker].quote;
+                } else {
+                    return { 'Global Quote': { '05. price': 'N/A', '09. change': 'N/A', '10. change percent': 'N/A' } };
+                }
+            } else {
+                const response = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${currentTicker}&apikey=${apiKey}`);
+                return await response.json();
+            }
+        }
+
+        async function fetchEarnings() {
+            const isInArtifact = window.location.protocol === 'about:';
+            
+            if (isInArtifact) {
+                await new Promise(resolve => setTimeout(resolve, 400));
+                return {}; // Return empty object for sample data
+            } else {
+                const response = await fetch(`https://www.alphavantage.co/query?function=EARNINGS&symbol=${currentTicker}&apikey=${apiKey}`);
+                return await response.json();
+            }
+        }
+
+        function displayResults(overview, quote, earnings) {
+            if (overview.Note || quote.Note || !overview.Symbol) {
+                displayError('API limit reached or invalid data. Please try again later or check your inputs.');
+                return;
+            }
+
+            const results = document.getElementById('results');
+            
+            // Update company header
+            document.getElementById('companyName').textContent = overview.Name || 'N/A';
+            document.getElementById('companyTicker').textContent = `${overview.Symbol} - ${overview.Exchange}`;
+
+            // Current price data
+            const globalQuote = quote['Global Quote'] || {};
+            const currentPrice = globalQuote['05. price'] || 'N/A';
+            const change = globalQuote['09. change'] || 'N/A';
+            const changePercent = globalQuote['10. change percent'] || 'N/A';
+
+            // Display metrics
+            displayPriceMetrics(overview, globalQuote);
+            displayProfitabilityMetrics(overview);
+            displayGrowthMetrics(overview, earnings);
+            displayFinancialMetrics(overview);
+
+            results.style.display = 'block';
+        }
+
+        function displayPriceMetrics(overview, quote) {
+            const container = document.getElementById('priceMetrics');
+            const currentPrice = quote['05. price'] || 'N/A';
+            const change = quote['09. change'] || 'N/A';
+            const changePercent = quote['10. change percent'] || 'N/A';
+            
+            const metrics = [
+                { label: 'Current Price', value: formatCurrency(currentPrice) },
+                { label: 'Today\'s Change', value: `${formatCurrency(change)} (${changePercent})`, class: parseFloat(change) >= 0 ? 'positive' : 'negative' },
+                { label: 'P/E Ratio', value: formatNumber(overview.PERatio) },
+                { label: 'Forward P/E', value: formatNumber(overview.ForwardPE) },
+                { label: 'P/B Ratio', value: formatNumber(overview.PriceToBookRatio) },
+                { label: 'PEG Ratio', value: formatNumber(overview.PEGRatio) },
+                { label: '52 Week High', value: formatCurrency(overview['52WeekHigh']) },
+                { label: '52 Week Low', value: formatCurrency(overview['52WeekLow']) }
+            ];
+
+            container.innerHTML = metrics.map(metric => 
+                `<div class="metric-item">
+                    <span class="metric-label">${metric.label}</span>
+                    <span class="metric-value ${metric.class || ''}">${metric.value}</span>
+                </div>`
+            ).join('');
+        }
+
+        function displayProfitabilityMetrics(overview) {
+            const container = document.getElementById('profitabilityMetrics');
+            
+            const metrics = [
+                { label: 'ROE (%)', value: formatPercent(overview.ReturnOnEquityTTM) },
+                { label: 'ROA (%)', value: formatPercent(overview.ReturnOnAssetsTTM) },
+                { label: 'Operating Margin (%)', value: formatPercent(overview.OperatingMarginTTM) },
+                { label: 'Profit Margin (%)', value: formatPercent(overview.ProfitMargin) },
+                { label: 'Gross Profit TTM', value: formatLargeNumber(overview.GrossProfitTTM) },
+                { label: 'EBITDA', value: formatLargeNumber(overview.EBITDA) },
+                { label: 'Dividend Yield (%)', value: formatPercent(overview.DividendYield) }
+            ];
+
+            container.innerHTML = metrics.map(metric => 
+                `<div class="metric-item">
+                    <span class="metric-label">${metric.label}</span>
+                    <span class="metric-value">${metric.value}</span>
+                </div>`
+            ).join('');
+        }
+
+        function displayGrowthMetrics(overview, earnings) {
+            const container = document.getElementById('growthMetrics');
+            
+            const metrics = [
+                { label: 'EPS (TTM)', value: formatCurrency(overview.EPS) },
+                { label: 'Revenue Growth (%)', value: formatPercent(overview.QuarterlyRevenueGrowthYOY) },
+                { label: 'Earnings Growth (%)', value: formatPercent(overview.QuarterlyEarningsGrowthYOY) },
+                { label: 'Revenue TTM', value: formatLargeNumber(overview.RevenueTTM) },
+                { label: 'Analyst Target', value: formatCurrency(overview.AnalystTargetPrice) },
+                { label: 'Beta', value: formatNumber(overview.Beta) },
+                { label: 'Book Value per Share', value: formatCurrency(overview.BookValue) }
+            ];
+
+            container.innerHTML = metrics.map(metric => 
+                `<div class="metric-item">
+                    <span class="metric-label">${metric.label}</span>
+                    <span class="metric-value">${metric.value}</span>
+                </div>`
+            ).join('');
+        }
+
+        function displayFinancialMetrics(overview) {
+            const container = document.getElementById('financialMetrics');
+            
+            const metrics = [
+                { label: 'Market Cap', value: formatLargeNumber(overview.MarketCapitalization) },
+                { label: 'Debt/Equity', value: formatNumber(overview.DebtToEquity) },
+                { label: 'Current Ratio', value: formatNumber(overview.CurrentRatio) },
+                { label: 'Quick Ratio', value: formatNumber(overview.QuickRatio) },
+                { label: 'Shares Outstanding', value: formatLargeNumber(overview.SharesOutstanding) },
+                { label: 'Ex-Dividend Date', value: overview.ExDividendDate || 'N/A' },
+                { label: 'Dividend Date', value: overview.DividendDate || 'N/A' }
+            ];
+
+            container.innerHTML = metrics.map(metric => 
+                `<div class="metric-item">
+                    <span class="metric-label">${metric.label}</span>
+                    <span class="metric-value">${metric.value}</span>
+                </div>`
+            ).join('');
+        }
+
+        function displayError(message) {
+            const results = document.getElementById('results');
+            results.innerHTML = `<div class="error">${message}</div>`;
+            results.style.display = 'block';
+        }
+
+        function formatCurrency(value) {
+            if (!value || value === 'None' || value === '-') return 'N/A';
+            const num = parseFloat(value);
+            if (isNaN(num)) return 'N/A';
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(num);
+        }
+
+        function formatNumber(value) {
+            if (!value || value === 'None' || value === '-') return 'N/A';
+            const num = parseFloat(value);
+            if (isNaN(num)) return 'N/A';
+            return num.toFixed(2);
+        }
+
+        function formatPercent(value) {
+            if (!value || value === 'None' || value === '-') return 'N/A';
+            const num = parseFloat(value);
+            if (isNaN(num)) return 'N/A';
+            return (num * 100).toFixed(2) + '%';
+        }
+
+        function formatLargeNumber(value) {
+            if (!value || value === 'None' || value === '-') return 'N/A';
+            const num = parseFloat(value);
+            if (isNaN(num)) return 'N/A';
+            
+            if (num >= 1e12) return (num / 1e12).toFixed(1) + 'T';
+            if (num >= 1e9) return (num / 1e9).toFixed(1) + 'B';
+            if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+            if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
+            
+            return num.toLocaleString();
+        }
+    </script>
+</body>
+</html>
